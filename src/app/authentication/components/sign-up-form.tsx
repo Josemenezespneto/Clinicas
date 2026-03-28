@@ -5,6 +5,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -71,22 +72,17 @@ const SignUpForm = () => {
             form.reset();
             router.push("/dashboard");
           },
-          onError: (ctx) => {
-            form.setError("root", {
-              type: "manual",
-              message:
-                ctx.error.message ||
-                "Não foi possível criar a conta. Verifique os dados e tente novamente.",
-            });
+          onError: () => {
+            toast.error(
+              "Não foi possível criar a conta. Verifique os dados e tente novamente.",
+            );
           },
         },
       );
     } catch {
-      form.setError("root", {
-        type: "manual",
-        message:
-          "Não foi possível criar a conta. Verifique os dados e tente novamente.",
-      });
+      toast.error(
+        "Não foi possível criar a conta. Verifique os dados e tente novamente.",
+      );
     }
   };
 

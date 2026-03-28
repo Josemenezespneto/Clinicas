@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
+import { toast } from "sonner";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,16 +26,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email({ message: "Por favor, insira um email válido." }),
+  password: z
+    .string()
+    .min(8, { message: "A senha deve conter pelo menos 8 caracteres." }),
+});
+
+type LoginSchema = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
-  const loginSchema = z.object({
-    email: z.email({ message: "Por favor, insira um email válido." }).trim(),
-    password: z
-      .string()
-      .min(8, { message: "A senha deve conter pelo menos 8 caracteres." }),
-  });
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -41,19 +52,41 @@ const LoginForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof loginSchema>) => {
-    console.log("Form data:", values);
+  const onSubmit = async (values: LoginSchema) => {
+    form.clearErrors("root");
+
+    try {
+      await authClient.signIn.email(
+        {
+          email: values.email,
+          password: values.password,
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push("/dashboard");
+          },
+          onError: () => {
+            toast.error(
+              "Não foi possível fazer login. Verifique suas credenciais.",
+            );
+          },
+        },
+      );
+    } catch {
+      toast.error("Ocorreu um erro inesperado. Tente novamente.");
+    }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
   return (
     <Card>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <CardHeader>
             <CardTitle>Login</CardTitle>
             <CardDescription>Faça login para continuar.</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-6">
             <FormField
               control={form.control}
@@ -62,7 +95,12 @@ const LoginForm = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      autoComplete="email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -80,10 +118,13 @@ const LoginForm = () => {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Senha"
+                        autoComplete="current-password"
+                        className="pr-10"
                         {...field}
                       />
                       <button
                         type="button"
+                        aria-label={showPassword ? "hide" : "show"}
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="right-2 top-1/2 absolute -translate-y-1/2"
                       >
@@ -99,10 +140,28 @@ const LoginForm = () => {
                 </FormItem>
               )}
             />
+
+            {form.formState.errors.root && (
+              <p className="text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </p>
+            )}
           </CardContent>
+
           <CardFooter>
-            <Button type="submit" className="w-full mt-8">
-              Entrar
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                  Entrando...
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </CardFooter>
         </form>
