@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,20 +25,29 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+
+const registerSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { message: "O nome deve conter pelo menos 2 caracteres." }),
+  email: z
+    .string()
+    .trim()
+    .email({ message: "Por favor, insira um email válido." }),
+  password: z
+    .string()
+    .min(8, { message: "A senha deve conter pelo menos 8 caracteres." }),
+});
+
+type RegisterSchema = z.infer<typeof registerSchema>;
 
 const SignUpForm = () => {
-  const registerSchema = z.object({
-    name: z
-      .string()
-      .trim()
-      .min(2, { message: "O nome deve conter pelo menos 2 caracteres." }),
-    email: z.email({ message: "Por favor, insira um email válido." }).trim(),
-    password: z
-      .string()
-      .min(8, { message: "A senha deve conter pelo menos 8 caracteres." }),
-  });
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<z.infer<typeof registerSchema>>({
+  const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
@@ -46,11 +56,40 @@ const SignUpForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    console.log("Form data:", values);
+  const onSubmit = async (values: RegisterSchema) => {
+    form.clearErrors("root");
+
+    try {
+      await authClient.signUp.email(
+        {
+          email: values.email,
+          password: values.password,
+          name: values.name,
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push("/dashboard");
+          },
+          onError: (ctx) => {
+            form.setError("root", {
+              type: "manual",
+              message:
+                ctx.error.message ||
+                "Não foi possível criar a conta. Verifique os dados e tente novamente.",
+            });
+          },
+        },
+      );
+    } catch {
+      form.setError("root", {
+        type: "manual",
+        message:
+          "Não foi possível criar a conta. Verifique os dados e tente novamente.",
+      });
+    }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
   return (
     <Card>
       <Form {...form}>
@@ -59,6 +98,7 @@ const SignUpForm = () => {
             <CardTitle>Criar conta</CardTitle>
             <CardDescription>Crie uma nova conta para começar.</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-8">
             <FormField
               control={form.control}
@@ -67,12 +107,18 @@ const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome" {...field} />
+                    <Input
+                      type="text"
+                      placeholder="Nome"
+                      autoComplete="name"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="email"
@@ -80,12 +126,18 @@ const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      autoComplete="email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -97,10 +149,13 @@ const SignUpForm = () => {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Senha"
+                        autoComplete="new-password"
+                        className="pr-10"
                         {...field}
                       />
                       <button
                         type="button"
+                        aria-label={showPassword ? "hide" : "show"}
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="right-2 top-1/2 absolute -translate-y-1/2"
                       >
@@ -116,10 +171,28 @@ const SignUpForm = () => {
                 </FormItem>
               )}
             />
+
+            {form.formState.errors.root && (
+              <p className="text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </p>
+            )}
           </CardContent>
+
           <CardFooter>
-            <Button type="submit" className="w-full">
-              Criar conta
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar conta"
+              )}
             </Button>
           </CardFooter>
         </form>
