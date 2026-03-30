@@ -72,10 +72,10 @@ const SignUpForm = () => {
             form.reset();
             router.push("/dashboard");
           },
-          onError: () => {
-            toast.error(
-              "Não foi possível criar a conta. Verifique os dados e tente novamente.",
-            );
+          onError: (ctx) => {
+            if (ctx.error.code === "USER_ALREADY_EXISTS") {
+              toast.error("Email já cadastrado. Por favor, faça login.");
+            }
           },
         },
       );
