@@ -78,6 +78,17 @@ const LoginForm = () => {
     }
   };
 
+  const onGoogleSignIn = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/dashboard`,
+      });
+    } catch {
+      toast.error("Ocorreu um erro inesperado. Tente novamente.");
+    }
+  };
+
   return (
     <Card>
       <Form {...form}>
@@ -149,20 +160,32 @@ const LoginForm = () => {
           </CardContent>
 
           <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={form.formState.isSubmitting}
-            >
-              {form.formState.isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                  Entrando...
-                </>
-              ) : (
-                "Entrar"
-              )}
-            </Button>
+            <div className="w-full space-y-2">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                    Entrando...
+                  </>
+                ) : (
+                  "Entrar"
+                )}
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex items-center w-full gap-2"
+                onClick={onGoogleSignIn}
+                type="button"
+              >
+                <img src="/google-icon.svg" alt="Google" className="w-4 h-4" />
+                Entrar com Google
+              </Button>
+            </div>
           </CardFooter>
         </form>
       </Form>
