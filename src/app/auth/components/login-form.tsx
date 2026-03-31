@@ -28,6 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
+type LoginSchema = z.infer<typeof loginSchema>;
+
 const loginSchema = z.object({
   email: z
     .string()
@@ -37,8 +39,6 @@ const loginSchema = z.object({
     .string()
     .min(8, { message: "A senha deve conter pelo menos 8 caracteres." }),
 });
-
-type LoginSchema = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
   const router = useRouter();
