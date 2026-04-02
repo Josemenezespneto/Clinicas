@@ -16,7 +16,6 @@ export default function SignOutButton() {
     try {
       await authClient.signOut();
       router.replace("/auth");
-      router.refresh();
     } finally {
       setLoading(false);
     }

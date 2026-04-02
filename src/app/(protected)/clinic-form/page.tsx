@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { CreateClinic } from "./components/create-clinic";
+import { CreateClinic } from "./_components/create-clinic";
 
 const ClinicFormPage = () => {
   return (

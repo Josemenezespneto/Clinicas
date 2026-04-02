@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -182,7 +183,12 @@ const LoginForm = () => {
                 onClick={onGoogleSignIn}
                 type="button"
               >
-                <img src="/google-icon.svg" alt="Google" className="w-4 h-4" />
+                <Image
+                  src="/google-icon.svg"
+                  alt="Google"
+                  width={16}
+                  height={16}
+                />
                 Entrar com Google
               </Button>
             </div>
