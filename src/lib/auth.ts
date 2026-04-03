@@ -27,7 +27,7 @@ export const auth = betterAuth({
       return {
         user: {
           ...user,
-          clinics: clinics.map((uc) => uc.clinic),
+          clinics: clinics?.map((uc) => uc?.clinic).filter(Boolean) || [],
         },
         session,
       };
