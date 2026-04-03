@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +56,7 @@ const items = [
 
 export const AppSidebar = () => {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
 
   const handleSignOut = async () => {
     try {
@@ -71,7 +73,7 @@ export const AppSidebar = () => {
   };
   return (
     <Sidebar>
-      <SidebarHeader className="p-5 border-b">
+      <SidebarHeader className="p-4 border-b">
         <Image src="/logo.svg" alt="Logo" width={165} height={25} priority />
       </SidebarHeader>
 
@@ -95,11 +97,32 @@ export const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t">
+      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger>Clinica</DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size="lg">
+                  <Avatar>
+                    <AvatarImage
+                      src={session?.user?.image}
+                      alt={session?.user?.name}
+                    />
+                    <AvatarFallback>
+                      {session?.user?.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex flex-col text-left">
+                    <p className="text-sm font-medium">
+                      {session?.user?.clinics?.[0]?.name}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {session?.user?.email}
+                    </p>
+                  </div>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut />
